@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoVoice - Sustainable Living Assistant</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #e8f5e9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+
+        .chat-header {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f1f8e9;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background-color: #81c784;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.ai {
+            background-color: #ffffff;
+            border: 1px solid #c8e6c9;
+            color: #333;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            background-color: #ffffff;
+            border-top: 1px solid #c8e6c9;
+        }
+
+        #textInput {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #c8e6c9;
+            border-radius: 5px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px;
+            margin-left: 10px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>EcoVoice</h1>
+            <p>Your Sustainable Living Assistant</p>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="textInput" placeholder="Ask me anything...">
+            <button id="sendButton">Send</button>
+            <button id="micButton">🎤</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatMessages = document.getElementById('chatMessages');
+            const textInput = document.getElementById('textInput');
+            const sendButton = document.getElementById('sendButton');
+            const micButton = document.getElementById('micButton');
+    
+            function addMessage(text, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', isUser ? 'user' : 'ai');
+                messageDiv.textContent = text;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+    
+            async function sendMessage() {
+                const text = textInput.value.trim();
+                if (!text) return;
+                addMessage(text, true);
+                textInput.value = '';
+    
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+    
+                const data = await response.json();
+                addMessage(data.response);
+            }
+    
+            sendButton.addEventListener('click', sendMessage);
+            textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    
+            micButton.addEventListener('click', async () => {
+                addMessage("Listening...");
+                const response = await fetch('/convert-speech');
+                const data = await response.json();
+                if (data.text) {
+                    addMessage(data.text, true);
+                    sendMessage(data.text);
+                } else {
+                    addMessage("Could not understand. Try again.");
+                }
+            });
+        });
+    </script>
+
+   
+</body>
+</html>
